@@ -3,93 +3,109 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AQA A-level Full Specification RAG Tracker</title>
+<title>AQA A-level RAG Lesson Tracker</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <header>
-<div class="header-inner">
-  <div>
-    <h1>AQA A-level Full Specification RAG Tracker</h1>
-    <div class="subtitle">Lesson-level specification tracker • Physics 7408 • Chemistry 7405 • Mathematics 7357</div>
+  <div class="header-inner">
+    <div>
+      <div class="eyebrow">AQA A-level</div>
+      <h1>Lesson RAG Tracker</h1>
+      <div class="subtitle">Physics • Chemistry • Mathematics</div>
+    </div>
+    <details class="tools-menu">
+      <summary class="btn ghost">Tools</summary>
+      <div class="tools-popover">
+        <button class="menu-btn" onclick="window.print()">Print progress</button>
+        <button class="menu-btn" onclick="downloadCSV()">Export subject CSV</button>
+        <button class="menu-btn" onclick="exportJSON()">Export backup</button>
+        <label class="menu-btn file-label">Import backup<input id="importFile" type="file" accept=".json" hidden></label>
+        <button class="menu-btn danger-text" onclick="resetCurrent()">Reset student progress</button>
+      </div>
+    </details>
   </div>
-  <div class="header-actions">
-    <button class="btn ghost" onclick="window.print()">Print report</button>
-    <button class="btn ghost" onclick="exportJSON()">Export backup</button>
-    <label class="btn ghost" style="cursor:pointer">Import backup<input id="importFile" type="file" accept=".json" hidden></label>
-  </div>
-</div>
 </header>
 
 <main>
-<section class="toolbar">
-  <div class="field"><label>Student</label><select id="studentSelect"></select></div>
-  <button class="btn" id="addStudent">+ Add student</button>
-  <button class="btn" id="renameStudent">Rename</button>
-  <button class="btn" id="deleteStudent">Delete</button>
-  <div class="spacer"></div>
-  <div class="field"><label>Search</label><input id="search" type="text" placeholder="topic or subtopic..."></div>
-</section>
-
-<div class="subject-tabs" id="subjectTabs"></div>
-
-<section class="dashboard">
-  <div class="dash-grid">
-    <div class="metric"><div class="k">Overall mastery</div><div class="v" id="mastery">0%</div><div class="progress"><div id="masteryBar" style="width:0%"></div></div></div>
-    <div class="metric"><div class="k">Green</div><div class="v" id="greenCount">0</div></div>
-    <div class="metric"><div class="k">Amber</div><div class="v" id="amberCount">0</div></div>
-    <div class="metric"><div class="k">Red</div><div class="v" id="redCount">0</div></div>
-    <div class="metric"><div class="k">Not rated</div><div class="v" id="noneCount">0</div></div>
-    <div class="metric"><div class="k">Average score</div><div class="v" id="avgScore">—</div></div>
-  </div>
-  <div class="legend"><span><i class="dot" style="background:var(--red)"></i>Red = needs reteaching</span><span><i class="dot" style="background:var(--amber)"></i>Amber = developing</span><span><i class="dot" style="background:var(--green)"></i>Green = secure</span></div>
-</section>
-
-<div class="content-grid">
-  <section class="panel">
-    <div class="filters">
-      <select id="statusFilter">
-        <option value="all">All RAG statuses</option><option value="red">Red only</option><option value="amber">Amber only</option>
-        <option value="green">Green only</option><option value="none">Not rated</option>
-      </select>
-      <select id="sortMode"><option value="spec">Specification order</option><option value="weak">Weakest first</option><option value="score">Lowest test score</option></select>
-      <button class="btn" id="expandAll">Expand all</button>
-      <button class="btn" id="collapseAll">Collapse all</button>
-      <button class="btn" id="clearFilters">Clear filters</button>
+  <section class="student-bar">
+    <div class="student-picker">
+      <label for="studentSelect">Student</label>
+      <select id="studentSelect"></select>
     </div>
-    <div id="physicsOption" class="option-box" style="display:none">
-      <div class="field"><label>Physics option</label>
-        <select id="physicsOptionSelect">
-          <option value="Astrophysics">Astrophysics</option>
-          <option value="Medical physics">Medical physics</option>
-          <option value="Engineering physics">Engineering physics</option>
-          <option value="Turning points in physics">Turning points in physics</option>
-          <option value="Electronics">Electronics</option>
-          <option value="ALL">Show all options</option>
-        </select>
+    <div class="student-actions">
+      <button class="quiet-btn" id="addStudent">Add</button>
+      <button class="quiet-btn" id="renameStudent">Rename</button>
+      <button class="quiet-btn" id="deleteStudent">Delete</button>
+    </div>
+  </section>
+
+  <nav class="subject-tabs" id="subjectTabs" aria-label="Subjects"></nav>
+
+  <section class="overview">
+    <div class="overview-main">
+      <div class="overview-title-row">
+        <div>
+          <div class="eyebrow dark" id="subjectLabel">Physics lesson sequence</div>
+          <h2>Your progress</h2>
+        </div>
+        <div class="progress-number" id="progressPercent">0%</div>
       </div>
-      <div class="small" style="margin-top:6px">AQA students study the eight core areas plus one optional topic.</div>
+      <div class="progress-track"><div id="progressBar" style="width:0%"></div></div>
+      <div class="progress-meta" id="progressMeta">0 secure • 0 to review • 0 not rated</div>
+      <div class="rag-key" aria-label="RAG key">
+        <span><i class="key-dot red"></i>Red — need help</span>
+        <span><i class="key-dot amber"></i>Amber — nearly there</span>
+        <span><i class="key-dot green"></i>Green — secure</span>
+      </div>
+    </div>
+    <div class="continue-card">
+      <div class="continue-label">Continue your course</div>
+      <div class="continue-title" id="continueTitle">Choose a lesson to begin</div>
+      <div class="small" id="continueMeta">Your next unrated lesson will appear here.</div>
+      <button class="btn primary" id="continueBtn">Go to next lesson</button>
+    </div>
+  </section>
+
+  <section class="controls-panel">
+    <div class="view-toggle" id="viewToggle" aria-label="Lesson view">
+      <button class="view-btn active" data-view="all">Lesson sequence</button>
+      <button class="view-btn" data-view="focus">Revision focus</button>
+      <button class="view-btn" data-view="unrated">Not rated</button>
+    </div>
+    <div class="search-wrap">
+      <input id="search" type="search" placeholder="Search lessons..." aria-label="Search lessons">
+    </div>
+  </section>
+
+  <section id="physicsOption" class="option-box" style="display:none">
+    <label for="physicsOptionSelect">Physics optional topic</label>
+    <select id="physicsOptionSelect">
+      <option value="Astrophysics">Astrophysics</option>
+      <option value="Medical physics">Medical physics</option>
+      <option value="Engineering physics">Engineering physics</option>
+      <option value="Turning points in physics">Turning points in physics</option>
+      <option value="Electronics">Electronics</option>
+      <option value="ALL">Show all options</option>
+    </select>
+  </section>
+
+  <section class="lesson-panel">
+    <div class="lesson-panel-head">
+      <div>
+        <h2 id="viewTitle">Lesson sequence</h2>
+        <p id="viewDescription">Work through the specification in order and choose Red, Amber or Green for each lesson.</p>
+      </div>
+      <div class="lesson-count" id="lessonCount"></div>
     </div>
     <div id="topicList"></div>
   </section>
-
-  <aside class="panel side">
-    <h3 style="margin-top:0">Revision priority</h3>
-    <div class="small">Red topics first, then amber. Low confidence and low test scores move topics higher.</div>
-    <div id="revisionQueue" style="margin-top:8px"></div>
-    <hr style="border:0;border-top:1px solid var(--line);margin:14px 0">
-    <h3>Quick actions</h3>
-    <button class="btn" style="width:100%;margin-bottom:7px" onclick="setVisibleStatus('green')">Mark visible Green</button>
-    <button class="btn" style="width:100%;margin-bottom:7px" onclick="setVisibleStatus('amber')">Mark visible Amber</button>
-    <button class="btn" style="width:100%;margin-bottom:7px" onclick="setVisibleStatus('red')">Mark visible Red</button>
-    <button class="btn" style="width:100%;margin-bottom:7px" onclick="downloadCSV()">Export current student CSV</button>
-    <button class="btn" style="width:100%" onclick="resetCurrent()">Reset current student</button>
-  </aside>
-</div>
 </main>
+
 <footer>
-Built as an offline-first browser tracker. Progress is saved automatically in this browser using local storage. Expanded lesson-level checkpoints map across the AQA A-level Physics 7408, Chemistry 7405 and Mathematics 7357 specifications. Required practicals and cross-course skills are included as separate trackable rows.
+  Progress saves automatically in this browser. The tracker keeps the full lesson-level specification datasets for AQA Physics 7408, Chemistry 7405 and Mathematics 7357.
 </footer>
+
 <script src="physics.js"></script>
 <script src="chemistry.js"></script>
 <script src="maths.js"></script>
